@@ -5,7 +5,8 @@ class Tensor:
     def __init__(self, data, prev=(), func="", name="", requires_grad=False, dtype=np.float32):
         if not isinstance(data, np.ndarray):
             data = np.array(data)
-        self.data = data.astype(dtype) if dtype else data
+        self.data = data.astype(dtype)
+        self.shape = self.data.shape
         
         self.grad = np.zeros_like(data).astype(dtype)
         self._backward = lambda: None
@@ -37,13 +38,16 @@ class Tensor:
                     queue.append(child)
         
     def __repr__(self):
-        return f"Tensor(data={self.data}, requires_grad={self.requires_grad})"
+        data = repr(self.data).replace("array(", "tensor(").replace(")", "")
+        lines = data.split("\n")
+        data = "\n".join([lines[0]] + [" " + line for line in lines[1:]])
+        return f"{data}, requires_grad={self.requires_grad})"
     
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=False)
         
         requires_grad = self.requires_grad or other.requires_grad
-        out = Tensor(self.data + other.data, prev=(self, other), func="add", requires_grad=requires_grad)
+        out = Tensor(self.data + other.data, prev=(self, other), func="+", requires_grad=requires_grad)
         
         def _backward():
             if self.requires_grad:
@@ -70,7 +74,7 @@ class Tensor:
         other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=False)
         
         requires_grad = self.requires_grad or other.requires_grad
-        out = Tensor(self.data * other.data, prev=(self, other), func="mul", requires_grad=requires_grad)
+        out = Tensor(self.data * other.data, prev=(self, other), func="*", requires_grad=requires_grad)
 
         def _backward():
             self.grad += out.grad * other.data
@@ -100,7 +104,7 @@ class Tensor:
         assert isinstance(power, (int, float))
         
         requires_grad = self.requires_grad
-        out = Tensor(self.data**power, prev=(self,), func="pow", requires_grad=self.requires_grad)
+        out = Tensor(self.data**power, prev=(self,), func=f"^{power}", requires_grad=self.requires_grad)
         
         def _backward():
             self.grad += out.grad * power * self.data**(power - 1) 
@@ -130,6 +134,18 @@ class Tensor:
                 grad = np.reshape(out.grad, out.grad.shape + (1,) * (self.data.ndim - out.grad.ndim))
             self.grad += np.ones_like(self.data) * grad
                 
+        out._backward = _backward
+        return out
+    
+    def sigmoid(self):
+        out = Tensor(1 / (1 + np.exp(-self.data)),
+                     prev=(self,),
+                     func="sigmoid",
+                     requires_grad=self.requires_grad)
+        
+        def _backward():
+            self.grad = out.grad * out.data * (np.ones_like(out.data) - out.data)
+            
         out._backward = _backward
         return out
         
