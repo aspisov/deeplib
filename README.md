@@ -1,2 +1,2 @@
-# depth
-Implementing deep learning library from scratch.
+# deeplib
+Deep learning (torch-like) library from scratch
