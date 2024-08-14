@@ -3,17 +3,31 @@ import deeplib
 import deeplib.nn as nn
 from sklearn.datasets import load_wine
 
+from sklearn.datasets import load_wine
+    
 data = load_wine()
-X, y = deeplib.Tensor(data.data, requires_grad=True), deeplib.Tensor(data.target)
-
+X = deeplib.Tensor(data.data, dtype=np.float32)
+y = deeplib.Tensor(data.target.reshape(-1, 1), dtype=np.float32)
+    
 model = nn.Sequential(
-    nn.Linear(13, 10),
-    nn.Linear(10, 4),
+    nn.Linear(13, 8),
+    nn.ReLU(),
+    nn.Linear(8, 4),
+    nn.ReLU(),
     nn.Linear(4, 1)
 )
-
-for i in range(1):
+    
+lr = 0.01
+for i in range(100):
     pred = model(X)
-    loss = ((y - pred)**2).sum()
-    print(loss.data)
+    loss = ((y - pred) ** 2).mean()
+
     loss.backward()
+    
+    for param in model.parameters():
+        param.data -= lr * param.grad
+    
+    model.zero_grad()
+
+    if i % 10 == 0:
+        print(f"Iteration {i}, Loss: {loss.data}")

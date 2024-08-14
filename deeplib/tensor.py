@@ -11,7 +11,7 @@ class Tensor:
         self.shape = self.data.shape
         self.dtype = self.data.dtype
         
-        self.grad: Optional[np.ndarray] = None
+        self.grad = np.zeros_like(self.data)
         self._backward = lambda: None
         self._children = set(_children)
         self.requires_grad = requires_grad
@@ -22,7 +22,7 @@ class Tensor:
         else:
             self.grad = np.zeros_like(self.data)
     
-    def backward(self):
+    def backward(self) -> None:
         self.grad = np.ones_like(self.data)
         
         topo = []
@@ -39,24 +39,34 @@ class Tensor:
             node._backward()
         
     def __repr__(self):
-        data = repr(self.data).replace("array(", "tensor(").replace(")", "")
-        lines = data.split("\n")
-        data = "\n".join([lines[0]] + [" " + line for line in lines[1:]])
-        return f"{data}, requires_grad={self.requires_grad})"
+        return f"tensor({self.data}, requires_grad={self.requires_grad})"
     
     def __add__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other, requires_grad=False)
+        other = other if isinstance(other, Tensor) else Tensor(other)
         
         requires_grad = self.requires_grad or other.requires_grad
         out = Tensor(self.data + other.data, _children=(self, other), requires_grad=requires_grad)
         
         def _backward():
             if self.requires_grad:
-                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-                self.grad += np.sum(out.grad, axis=0)
+                if self.grad is None or not isinstance(self.grad, np.ndarray):
+                    self.grad = np.zeros_like(self.data)
+                self.grad = self.grad + out.grad
+            
             if other.requires_grad:
-                other.grad = other.grad if other.grad is not None else np.zeros_like(other.data)
-                other.grad += np.sum(out.grad, axis=0)
+                if other.grad is None or not isinstance(other.grad, np.ndarray):
+                    other.grad = np.zeros_like(other.data)
+
+                # handle the case where broadcasting occurred
+                grad_other = out.grad
+                while grad_other.ndim > other.grad.ndim:
+                    grad_other = grad_other.sum(axis=0)
+                for i, dim in enumerate(other.grad.shape):
+                    if dim == 1:
+                        grad_other = grad_other.sum(axis=i, keepdims=True)
+                
+                other.grad = other.grad + grad_other
+
         
         out._backward = _backward
         return out
@@ -80,9 +90,12 @@ class Tensor:
         out = Tensor(self.data * other.data, _children=(self, other), requires_grad=requires_grad)
 
         def _backward():
-            self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-            self.grad += out.grad * other.data
-            other.grad += out.grad * self.data
+            if self.requires_grad:
+                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
+                self.grad += other.data * out.grad
+            if other.requires_grad:
+                other.grad = other.grad if other.grad is not None else np.zeros_like(other.data)
+                other.grad += self.data * out.grad
             
         out._backward = _backward
         return out
@@ -98,9 +111,12 @@ class Tensor:
         out = Tensor(self.data @ other.data, _children=(self, other), requires_grad=requires_grad)
         
         def _backward():
-            self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-            self.grad += out.grad @ other.data.T
-            other.grad += out.grad @ self.data.T
+            if self.requires_grad:
+                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
+                self.grad += out.grad @ other.data.T
+            if other.requires_grad:
+                other.grad = other.grad if other.grad is not None else np.zeros_like(other.data)
+                other.grad += self.grad.T @ out.grad
             
         out._backward = _backward
         return out
@@ -108,12 +124,13 @@ class Tensor:
     def __pow__(self, power):
         assert isinstance(power, (int, float))
         
-        requires_grad = self.requires_grad
         out = Tensor(self.data**power, _children=(self,), requires_grad=self.requires_grad)
         
         def _backward():
-            self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-            self.grad += out.grad * power * self.data**(power - 1) 
+            if self.requires_grad:
+                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
+                self.grad += out.grad * power * self.data**(power - 1)   
+            
             
         out._backward = _backward
         return out
@@ -122,8 +139,9 @@ class Tensor:
         out = Tensor(np.exp(self.data), _children=(self,), requires_grad=self.requires_grad)
         
         def _backward():
-            self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-            self.grad += out.grad * out.data
+            if self.requires_grad:
+                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
+                self.grad += out.grad * out.data
             
         out._backward = _backward
         return out
@@ -136,14 +154,17 @@ class Tensor:
         def _backward():
             if self.requires_grad:
                 self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
-                if keepdims:
-                    grad = out.grad
+                if axis is None:
+                    grad = out.grad * np.ones_like(self.data)
                 else:
-                    grad = out.grad.reshape(out.grad.shape + (1,) * (self.data.ndim - out.grad.ndim))
-                self.grad += grad
+                    grad = np.expand_dims(out.grad, axis=axis)
+                self.grad += np.broadcast_to(grad, self.shape)
                 
         out._backward = _backward
         return out
+    
+    def mean(self, axis=None, keepdims=False):
+        return self.sum(axis=axis, keepdims=keepdims) / self.data.size
     
     def sigmoid(self):
         out = Tensor(1 / (1 + np.exp(-self.data)),
@@ -152,6 +173,19 @@ class Tensor:
         
         def _backward():
             self.grad += out.grad * out.data * (np.ones_like(out.data) - out.data)
+            
+        out._backward = _backward
+        return out
+    
+    def relu(self):
+        out = Tensor(np.maximum(0, self.data),
+                     _children=(self,),
+                     requires_grad=self.requires_grad)
+        
+        def _backward():
+            if self.requires_grad:
+                self.grad = self.grad if self.grad is not None else np.zeros_like(self.data)
+                self.grad += out.grad * (self.data > 0)
             
         out._backward = _backward
         return out
