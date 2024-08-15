@@ -10,6 +10,8 @@ y = deeplib.Tensor(data.target.reshape(-1, 1), dtype=np.float32)
 model = nn.Sequential(
     nn.Linear(13, 8),
     nn.ReLU(),
+    nn.BatchNorm1d((X.shape[0], 8)),
+    nn.Dropout(0.5),
     nn.Linear(8, 4),
     nn.ReLU(),
     nn.Linear(4, 1)
