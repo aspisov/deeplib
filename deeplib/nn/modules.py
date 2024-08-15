@@ -1,5 +1,8 @@
+"""
+Implements basic neural network modules.
+"""
 import numpy as np
-from deeplib import Tensor
+import deeplib
 from typing import List
 
 
@@ -10,7 +13,7 @@ class Module:
     def __call__(self, input):
         return self.forward(input)
     
-    def parameters(self) -> List[Tensor]:
+    def parameters(self) -> List[deeplib.Tensor]:
         return []
     
     def zero_grad(self):
@@ -26,21 +29,25 @@ class Sequential(Module):
             input = module(input)
         return input
     
-    def parameters(self) -> List[Tensor]:
+    def parameters(self) -> List[deeplib.Tensor]:
         return [p for module in self.modules for p in module.parameters()]
     
 class Linear(Module):
-    def __init__(self, in_features, out_features):
-        # Xavier initialization
-        limit = np.sqrt(6 / (in_features + out_features))
-        self.W = Tensor(np.random.uniform(-limit, limit, (in_features, out_features)), requires_grad=True)
-        self.b = Tensor(np.zeros(out_features), requires_grad=True)
+    def __init__(self, in_features, out_features, bais=True):
+        limit = 1 / np.sqrt(in_features)
+        self.weight = deeplib.uniform(-limit, limit, (in_features, out_features), requires_grad=True)
+        if bais:
+            self.bias = deeplib.uniform(-limit, limit, out_features, requires_grad=True)
         
     def forward(self, input):
-        return input @ self.W + self.b
+        if self.bias is not None:
+            return input @ self.weight + self.bias
+        return input @ self.weight
     
-    def parameters(self) -> List[Tensor]:
-        return [self.W, self.b]
+    def parameters(self) -> List[deeplib.Tensor]:
+        if self.bias is not None:
+            return [self.weight, self.bias]
+        return [self.weight]
     
 class ReLU(Module):
     def forward(self, input):
