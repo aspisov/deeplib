@@ -87,7 +87,8 @@ class BatchNorm1d(Module):
     def forward(self, input: Tensor):
         if self.training:
             mean = input.mean(axis=0, keepdims=True)
-            var = input.var(axis=0, keepdims=True)
+            # use unbiased var estimation, however pytorch uses biased one
+            var = input.var(axis=0, keepdims=True, unbiased=True)
             
             with deeplib.no_grad():
                 self.running_mean = self.momentum * mean + (1 - self.momentum) * self.running_mean
@@ -98,5 +99,5 @@ class BatchNorm1d(Module):
             
         xhat = (input - mean) / np.sqrt(var + self.eps)
         out = self.gamma * xhat + self.beta
-            
+        
         return out

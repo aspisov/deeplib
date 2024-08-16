@@ -61,9 +61,17 @@ class Tensor:
         
         def _backward():
             if self.requires_grad:
-                self.grad = self.grad + out.grad
+                grad = out.grad
+                # sum over all broadcasted axes
+                while grad.ndim > self.grad.ndim:
+                    grad = grad.sum(axis=0)
+                for i, dim in enumerate(self.grad.shape):
+                    if dim == 1:
+                        grad = grad.sum(axis=i, keepdims=True)
+                self.grad = self.grad + grad
             if other.requires_grad:
                 grad_other = out.grad
+                # sum over all broadcasted axes
                 while grad_other.ndim > other.grad.ndim:
                     grad_other = grad_other.sum(axis=0)
                 for i, dim in enumerate(other.grad.shape):
@@ -133,14 +141,14 @@ class Tensor:
         out._backward = _backward
         return out
     
-    def __pow__(self, power):
-        assert isinstance(power, (int, float))
+    def __pow__(self, other):
+        assert isinstance(other, (int, float))
         
-        out = Tensor(self.data**power, _children=(self,), requires_grad=self.requires_grad)
+        out = Tensor(self.data**other, _children=(self,), requires_grad=self.requires_grad)
         
         def _backward():
             if self.requires_grad:
-                self.grad += out.grad * power * self.data**(power - 1)   
+                self.grad += out.grad * other * self.data**(other - 1)   
             
         out._backward = _backward
         return out
@@ -192,9 +200,13 @@ class Tensor:
     def mean(self, axis=None, keepdims=False):
         return self.sum(axis=axis, keepdims=keepdims) / self.data.size
     
-    def var(self, axis=None, keepdims=False):
+    def var(self, axis=None, keepdims=False, unbiased=False):
+        # calculates unbiased variance
         mean = self.mean(axis=axis, keepdims=True)
-        out = ((self - mean)**2).mean(axis=axis, keepdims=keepdims)
+        if unbiased:
+            out = ((self - mean)**2).sum(axis=axis, keepdims=keepdims) / (self.data.size - 1)
+        else:
+            out = ((self - mean)**2).sum(axis=axis, keepdims=keepdims) / self.data.size
         return out
     
     def sqrt(self):

@@ -11,6 +11,3 @@ def dropout(input: Tensor, p: float = 0.5, training: bool = True) -> Tensor:
 
 def relu(input: Tensor) -> Tensor:
     return input.relu()
-
-def batch_norm(input: Tensor, running_mean: Tensor, running_var: Tensor, weight: Tensor, bias: Tensor, eps: float = 1e-5, momentum: float = 0.1) -> Tensor:
-    return input
