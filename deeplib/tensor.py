@@ -49,9 +49,24 @@ class Tensor:
         
         for node in reversed(topo):
             node._backward()
+            
+    def dim(self):
+        return len(self.shape)
+    
+    def normal_(self, mean=0, std=1):
+        self.data = np.random.normal(mean, std, self.shape)
+        return self
         
     def __repr__(self):
-        return f"tensor({self.data}, requires_grad={self.requires_grad})"
+        # numpy representation
+        np_str = np.array2string(self.data, separator=', ', precision=4, suppress_small=True)
+        lines = np_str.split('\n')
+        # add 'tensor(' at the beginning and extra spacing
+        formatted_lines = ['tensor(' + lines[0]] + [' ' * 8 + line.strip() for line in lines[1:]]
+        formatted_lines[-1] += ')'
+        
+        tensor_str = '\n'.join(formatted_lines)
+        return tensor_str + f"       dtype={self.data.dtype}, shape={self.shape}"
     
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
