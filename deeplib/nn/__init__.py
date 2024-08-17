@@ -1,7 +1,6 @@
 from .modules import *
 
 from deeplib.nn import (
-    functional as funcional,
+    functional as functional,
     init as init,
-    modules as modules
 )
