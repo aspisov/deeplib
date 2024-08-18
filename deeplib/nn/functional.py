@@ -30,8 +30,7 @@ def sigmoid(input: Tensor) -> Tensor:
     return out
 
 def mse_loss(input: Tensor, target: Tensor) -> Tensor:
-    return ((input - target) ** 2).mean()
-
+    return deeplib.mean((input - target) ** 2)
 
 def cross_entropy_loss(logits: Tensor, target: Tensor) -> Tensor:
     N, C = logits.shape

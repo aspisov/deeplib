@@ -16,6 +16,17 @@ def _calculate_fan(tensor):
     
     return fan_in, fan_out
 
+def ones_(tensor):
+    with deeplib.no_grad():
+        return tensor.fill_(1.0)
+    
+def zeros_(tensor):
+    with deeplib.no_grad():
+        return tensor.fill_(0.0)
+
+def uniform_(tensor, low=0.0, high=1.0):
+    with deeplib.no_grad():
+        return tensor.uniform_(low, high)
 
 def xavier_normal_(tensor):
     fan_in, fan_out = _calculate_fan(tensor)

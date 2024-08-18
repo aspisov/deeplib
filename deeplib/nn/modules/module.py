@@ -1,4 +1,4 @@
-from deeplib import Tensor
+from deeplib.nn.parameter import Parameter
 from typing import Iterator, Tuple
 
 __all__ = ["Module"]
@@ -8,18 +8,10 @@ class Module:
         self._parameters = {}
         self._modules = {}
         self.training = True
-        self._initialize_parameters()
         
-    def _initialize_parameters(self):
-        for name, value in self.__dict__.items():
-            if isinstance(value, Tensor):
-                self.register_parameter(name, value)
-            elif isinstance(value, Module):
-                self.register_module(name, value)
-        
-    def register_parameter(self, name: str, param: Tensor):
-        if not isinstance(param, Tensor):
-            raise TypeError(f"Parameter must be an instance of Tensor. Got {type(param)}")
+    def register_parameter(self, name: str, param: Parameter):
+        if not isinstance(param, Parameter):
+            raise TypeError(f"Parameter must be an instance of Parameter. Got {type(param)}")
         self._parameters[name] = param
         
     def register_module(self, name: str, module: "Module"):
@@ -33,22 +25,18 @@ class Module:
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
     
-    def parameters(self) -> Iterator[Tensor]:
+    def parameters(self) -> Iterator[Parameter]:
         for param in self._parameters.values():
             yield param
         for module in self._modules.values():
             yield from module.parameters()
     
-    def named_parameters(self) -> Iterator[Tuple[str, Tensor]]:
+    def named_parameters(self) -> Iterator[Tuple[str, Parameter]]:
         for name, param in self._parameters.items():
             yield name, param
         for module_name, module in self._modules.items():
             for name, param in module.named_parameters():
                 yield f"{module_name}.{name}", param
-    
-    def zero_grad(self):
-        for p in self.parameters():
-            p.zero_grad()
             
     def train(self):
         self.training = True
@@ -57,7 +45,7 @@ class Module:
         self.training = False
         
     def __setattr__(self, name, value):
-        if isinstance(value, Tensor):
+        if isinstance(value, Parameter):
             self.register_parameter(name, value)
         elif isinstance(value, Module):
             self.register_module(name, value)

@@ -1,7 +1,5 @@
 import numpy as np
-from collections import deque
-from typing import Optional
-import deeplib
+
 
 class NoGrad:
     _enabled = False
@@ -19,9 +17,11 @@ def no_grad():
 
 
 class Tensor:
-    def __init__(self, data, _children=(), requires_grad=False, dtype=np.float32):
+    def __init__(self, data, _children=(), requires_grad=False, dtype=None):
+        if isinstance(data, Tensor):
+            data = data.data
         if not isinstance(data, np.ndarray):
-            data = np.array(data, dtype=dtype)
+            data = np.array(data, dtype=dtype if dtype else np.float32)
         self.data = data
         self.shape = self.data.shape
         self.dtype = self.data.dtype
@@ -31,11 +31,7 @@ class Tensor:
         self._backward = lambda: None
         self._children = set(_children)
         self._id = id(self)
-
-    def zero_grad(self) -> None:
-        if self.grad is not None:
-            self.grad.fill(0)
-
+            
     def backward(self) -> None:
         if not self.requires_grad:
             raise RuntimeError(
@@ -72,6 +68,14 @@ class Tensor:
 
     def normal_(self, mean=0, std=1):
         self.data = np.random.normal(mean, std, self.shape)
+        return self
+    
+    def uniform_(self, low=0, high=1):
+        self.data = np.random.uniform(low, high, self.shape)
+        return self
+    
+    def fill_(self, value):
+        self.data.fill(value)
         return self
 
     def __repr__(self):

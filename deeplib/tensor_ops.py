@@ -30,7 +30,6 @@ def zeros(shape, requires_grad=False):
 def randn(shape, requires_grad=False):
     return Tensor(np.random.randn(*shape), requires_grad=requires_grad)
 
-
 def uniform(low, high, shape, requires_grad=False):
     return Tensor(np.random.uniform(low, high, shape), requires_grad=requires_grad)
 
@@ -43,3 +42,6 @@ def argmax(tensor: Tensor, dim: int = None):
 
 def float(tensor: Tensor):
     return Tensor(tensor.data.astype(np.float32))
+
+def empty(shape, dtype=np.float32):
+    return Tensor(np.empty(shape), dtype=dtype)
