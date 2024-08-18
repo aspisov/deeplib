@@ -1,7 +1,6 @@
 from typing import List
 import deeplib
 from .module import Module
-from deeplib import Tensor
 import math
 
 __all__ = ["Linear"]
@@ -19,8 +18,3 @@ class Linear(Module):
         if self.bias is not None:
             return input @ self.weight + self.bias
         return input @ self.weight
-    
-    def parameters(self) -> List[Tensor]:
-        if self.bias is not None:
-            return [self.weight, self.bias]
-        return [self.weight]

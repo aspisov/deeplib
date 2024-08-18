@@ -33,18 +33,25 @@ def mse_loss(input: Tensor, target: Tensor) -> Tensor:
     return ((input - target) ** 2).mean()
 
 
-def cross_entropy_loss(input: Tensor, target: Tensor) -> Tensor:
-    log_probs = log_softmax(input)
-    return nll_loss(log_probs, target)
+def cross_entropy_loss(logits: Tensor, target: Tensor) -> Tensor:
+    N, C = logits.shape
+    probs = softmax(logits, dim=1)
+    nll = -deeplib.log(probs[np.arange(N), target.data.astype(int)])
+    loss = deeplib.mean(nll)
+    return loss
 
 
 def log_softmax(x: Tensor, dim: int = -1) -> Tensor:
     """Numerically stable implementation of log_softmax"""
-    max_x = deeplib.max(x, dim=dim, keepdims=True)
-    x_diff = x - max_x
-    exp_x_diff = deeplib.exp(x_diff)
-    sum_exp_x_diff = deeplib.sum(exp_x_diff, dim=dim, keepdims=True)
+    x_diff = x - deeplib.max(x, dim=dim, keepdims=True)
+    exp_tensor = deeplib.exp(x_diff)
+    sum_exp_x_diff = deeplib.sum(exp_tensor, dim=dim, keepdims=True)
     return x_diff - deeplib.log(sum_exp_x_diff)
+
+def softmax(x: Tensor, dim: int = -1) -> Tensor:
+    """Numerically stable implementation of softmax"""
+    exp_tensor = deeplib.exp(x - deeplib.max(x, dim=dim, keepdims=True))
+    return exp_tensor / deeplib.sum(exp_tensor, dim=dim, keepdims=True)
 
 
 def nll_loss(input: Tensor, target: Tensor) -> Tensor:

@@ -41,6 +41,11 @@ class IrisClassifier(nn.Module):
 
 
 model = IrisClassifier()
+model = deeplib.nn.Sequential(
+    nn.Linear(4, 10),
+    nn.ReLU(),
+    nn.Linear(10, 3)
+)
 
 # Define loss function and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -50,8 +55,8 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 num_epochs = 100
 for epoch in range(num_epochs):
     # Forward pass
-    outputs = model(X_train)
-    loss = criterion(outputs, y_train)
+    predicted = model(X_train)
+    loss = criterion(predicted, y_train)
 
     # Backward pass and optimization
     optimizer.zero_grad()
@@ -64,13 +69,12 @@ for epoch in range(num_epochs):
 # Evaluation
 model.eval()
 with deeplib.no_grad():
-    outputs = model(X_test)
-    # calculate accuracy
-    predicted = outputs.data.argmax(axis=1)
-    accuracy = (predicted == y_test).mean()
-    print(f"Accuracy: {accuracy:.4f}")
+    predicted = model(X_test)
+    predicted = predicted.argmax(dim=1)
+    accuracy = (predicted == y_test).float().mean()
+    print(f"Accuracy: {accuracy.item():.4f}")
 
 # Print classification report
 from sklearn.metrics import classification_report
 
-print(classification_report(y_test.data, predicted))
+print(classification_report(y_test.data, predicted.data))

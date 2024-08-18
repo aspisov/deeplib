@@ -9,7 +9,6 @@ class Optimizer:
             
     def step(self):
         raise NotImplemented
-    
 
 class SGD(Optimizer):
     def __init__(self, params, lr):
@@ -17,4 +16,4 @@ class SGD(Optimizer):
     
     def step(self):
         for param in self.params:
-            param.data -= self.defaults['lr'] * param.grad
+            param -= self.defaults['lr'] * param.grad

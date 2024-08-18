@@ -96,7 +96,7 @@ def sqrt(tensor):
     return pow(tensor, 0.5)
 
 def neg(tensor):
-    return mul(tensor, -1)
+    return tensor*-1
 
 def sub(tensor1, tensor2):
     return add(tensor1, neg(tensor2))

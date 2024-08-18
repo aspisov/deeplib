@@ -30,6 +30,7 @@ class Tensor:
         self.grad = np.zeros_like(self.data) if self.requires_grad else None
         self._backward = lambda: None
         self._children = set(_children)
+        self._id = id(self)
 
     def zero_grad(self) -> None:
         if self.grad is not None:
@@ -65,6 +66,9 @@ class Tensor:
 
     def item(self):
         return self.data.item()
+    
+    def __hash__(self):
+        return self._id
 
     def normal_(self, mean=0, std=1):
         self.data = np.random.normal(mean, std, self.shape)
@@ -101,17 +105,17 @@ class Tensor:
         return out
 
     def gather(self, dim, index):
-        # Ensure index is a Tensor
+        # ensure index is a Tensor
         if not isinstance(index, Tensor):
             index = Tensor(index)
 
-        # Create a list of slice objects for indexing
+        # create a list of slice objects for indexing
         slices = [slice(None)] * self.dim()
 
-        # Replace the slice at the specified dimension with the index array
+        # replace the slice at the specified dimension with the index array
         slices[dim] = index.data
 
-        # Use advanced indexing to gather the values
+        # use advanced indexing to gather the values
         gathered_data = self.data[tuple(slices)]
 
         out = Tensor(gathered_data, _children=(self,), requires_grad=self.requires_grad)
@@ -129,6 +133,11 @@ class Tensor:
         assert isinstance(other, (int, float, Tensor))
         other = other if isinstance(other, Tensor) else Tensor(other)
         return Tensor(self.data > other.data, dtype=np.float32)
+    
+    def __eq__(self, other):
+        if isinstance(other, Tensor):
+            other = other.data
+        return Tensor(self.data == other, dtype=np.float32)
 
 
 

@@ -37,3 +37,9 @@ def uniform(low, high, shape, requires_grad=False):
 
 def rand_like(tensor: Tensor, requires_grad: bool = False):
     return Tensor(np.random.randn(*tensor.shape), requires_grad=requires_grad)
+
+def argmax(tensor: Tensor, dim: int = None):
+    return Tensor(np.argmax(tensor.data, axis=dim))
+
+def float(tensor: Tensor):
+    return Tensor(tensor.data.astype(np.float32))

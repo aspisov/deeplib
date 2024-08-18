@@ -29,3 +29,7 @@ Tensor.sum = sum
 Tensor.mean = mean
 Tensor.var = var
 Tensor.max = max
+
+# tensor operations
+Tensor.argmax = argmax
+Tensor.float = float

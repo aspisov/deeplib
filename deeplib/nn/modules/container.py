@@ -3,14 +3,13 @@ from .module import Module
 from deeplib import Tensor
 
 class Sequential(Module):
-    def __init__(self, *args):
+    def __init__(self, *layers):
         super().__init__()
-        self.modules = args
-        
-    def forward(self, input):
-        for module in self.modules:
-            input = module(input)
-        return input
+        self.layers = layers
+        for i, layer in enumerate(self.layers):
+            self.register_module(f'layer_{i}', layer)
     
-    def parameters(self) -> List[Tensor]:
-        return [p for module in self.modules for p in module.parameters()]
+    def forward(self, input):
+        for layer in self.layers:
+            input = layer(input)
+        return input
