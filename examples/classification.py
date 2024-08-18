@@ -26,11 +26,13 @@ class IrisClassifier(nn.Module):
     def __init__(self):
         super(IrisClassifier, self).__init__()
         self.fc1 = nn.Linear(4, 10)
+        self.batchnorm = nn.BatchNorm1d(10)
         self.fc2 = nn.Linear(10, 3)
         self.relu = nn.ReLU()
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
+        x = self.batchnorm(x)
         x = self.fc2(x)
         return x
 
