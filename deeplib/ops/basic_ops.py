@@ -1,5 +1,6 @@
 from deeplib.tensor import Tensor
 
+__all__ = ["add", "sub", "mul", "matmul", "neg", "true_divide", "pow", "sqrt"]
 
 def add(tensor1, tensor2):
     tensor2 = tensor2 if isinstance(tensor2, Tensor) else Tensor(tensor2)
@@ -103,3 +104,18 @@ def sub(tensor1, tensor2):
 
 def true_divide(tensor1, tensor2):
     return mul(tensor1, tensor2**-1)
+
+
+# overload basic operations
+Tensor.__add__ = add
+Tensor.__iadd__ = add
+Tensor.__radd__ = add
+Tensor.__neg__ = neg
+Tensor.__sub__ = sub
+Tensor.__isub__ = sub
+Tensor.__mul__ = mul
+Tensor.__rmul__ = mul
+Tensor.__truediv__ = true_divide
+Tensor.__matmul__ = matmul
+Tensor.__pow__ = pow
+Tensor.sqrt = sqrt

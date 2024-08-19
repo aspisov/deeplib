@@ -39,7 +39,6 @@ def cross_entropy_loss(logits: Tensor, target: Tensor) -> Tensor:
     loss = deeplib.mean(nll)
     return loss
 
-
 def log_softmax(x: Tensor, dim: int = -1) -> Tensor:
     """Numerically stable implementation of log_softmax"""
     x_diff = x - deeplib.max(x, dim=dim, keepdims=True)
@@ -51,16 +50,3 @@ def softmax(x: Tensor, dim: int = -1) -> Tensor:
     """Numerically stable implementation of softmax"""
     exp_tensor = deeplib.exp(x - deeplib.max(x, dim=dim, keepdims=True))
     return exp_tensor / deeplib.sum(exp_tensor, dim=dim, keepdims=True)
-
-
-def nll_loss(input: Tensor, target: Tensor) -> Tensor:
-    assert input.dim() > 1, "Input should be at least 2-dimensional"
-    assert target.dim() == 1, "Target should be 1-dimensional"
-
-    gather_indices = Tensor(
-        target.data[:, None], requires_grad=False
-    )  # Convert target indices to a column tensor
-    log_probs = input.gather(dim=1, index=gather_indices)
-
-    loss = -log_probs.mean()
-    return loss

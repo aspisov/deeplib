@@ -1,6 +1,8 @@
 import numpy as np
 from deeplib.tensor import Tensor
 
+__all__ = ["exp", "log", "sum", "mean", "var", "max"]
+
 
 def exp(tensor):
     out = Tensor(np.exp(tensor.data), _children=(tensor,), requires_grad=tensor.requires_grad)
@@ -73,5 +75,10 @@ def max(tensor, dim=None, keepdims=False):
     out._backward = _backward
     return out
         
-
-
+# math operations
+Tensor.exp = exp
+Tensor.log = log
+Tensor.sum = sum
+Tensor.mean = mean
+Tensor.var = var
+Tensor.max = max

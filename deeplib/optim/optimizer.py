@@ -31,5 +31,6 @@ class SGD(Optimizer):
                 grad = momentum_buffer
             
             param.data -= self.defaults['lr'] * grad
+            # param -= self.defaults['lr'] * grad # doesn't work yet TODO
             
             self.momentum_buffers[i] = momentum_buffer
