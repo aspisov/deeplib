@@ -21,6 +21,16 @@ def relu(input: Tensor) -> Tensor:
     out._backward = _backward
     return out
 
+def tanh(X: Tensor) -> Tensor:
+    out = Tensor(np.tanh(X.data), _children=(X,), requires_grad=X.requires_grad)
+    
+    def _backward():
+        if X.requires_grad:
+            X.grad += out.grad * (1 - out.data**2)
+            
+    out._backward = _backward
+    return out
+
 def sigmoid(input: Tensor) -> Tensor:
     out = Tensor(1 / (1 + np.exp(-input.data)), _children=(input,), requires_grad=input.requires_grad)
     def _backward():

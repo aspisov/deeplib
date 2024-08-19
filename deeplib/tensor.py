@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class NoGrad:
     _enabled = False
 
@@ -92,46 +91,6 @@ class Tensor:
 
         tensor_str = "\n".join(formatted_lines)
         return tensor_str + f"       dtype={self.data.dtype}, shape={self.shape}"
-
-    def __getitem__(self, key):
-        if isinstance(key, Tensor):
-            key = key.data
-        sliced_data = self.data[key]
-        out = Tensor(sliced_data, _children=(self,), requires_grad=self.requires_grad)
-
-        def _backward():
-            if self.requires_grad:
-                grad = np.zeros_like(self.data)
-                grad[key] = out.grad
-                self.grad += grad
-
-        out._backward = _backward
-        return out
-
-    def gather(self, dim, index):
-        # ensure index is a Tensor
-        if not isinstance(index, Tensor):
-            index = Tensor(index)
-
-        # create a list of slice objects for indexing
-        slices = [slice(None)] * self.dim()
-
-        # replace the slice at the specified dimension with the index array
-        slices[dim] = index.data
-
-        # use advanced indexing to gather the values
-        gathered_data = self.data[tuple(slices)]
-
-        out = Tensor(gathered_data, _children=(self,), requires_grad=self.requires_grad)
-
-        def _backward():
-            if self.requires_grad:
-                grad = np.zeros_like(self.data)
-                np.add.at(grad, tuple(slices), out.grad)
-                self.grad += grad
-
-        out._backward = _backward
-        return out
 
     def __gt__(self, other):
         assert isinstance(other, (int, float, Tensor))

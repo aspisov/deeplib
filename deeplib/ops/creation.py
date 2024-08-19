@@ -1,8 +1,6 @@
 import numpy as np
 from deeplib import Tensor
 
-__all__ = ["tensor", "FloatTensor", "LongTensor", "ones_like", "zeros_like", "ones", "zeros", "randn", "uniform", "rand_like", "argmax", "float", "empty"]
-
 def tensor(data, requires_grad=False):
     return Tensor(data, requires_grad=requires_grad)
 
@@ -33,15 +31,5 @@ def uniform(low, high, shape, requires_grad=False):
 def rand_like(tensor: Tensor, requires_grad: bool = False):
     return Tensor(np.random.randn(*tensor.shape), requires_grad=requires_grad)
 
-def argmax(tensor: Tensor, dim: int = None):
-    return Tensor(np.argmax(tensor.data, axis=dim))
-
-def float(tensor: Tensor):
-    return Tensor(tensor.data.astype(np.float32))
-
 def empty(shape, dtype=np.float32):
     return Tensor(np.empty(shape), dtype=dtype)
-
-# tensor operations
-Tensor.argmax = argmax
-Tensor.float = float
