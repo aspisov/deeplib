@@ -37,8 +37,6 @@ class IrisClassifier(nn.Module):
         return x
 
 model = IrisClassifier()
-for name, param in model.named_parameters():
-    print(name, param.shape)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)

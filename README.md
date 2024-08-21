@@ -23,6 +23,7 @@ pip install git+https://github.com/aspisov/deeplib.git
 - `Linear`: Fully connected layer
 - `BatchNorm1d`: 1D batch normalization layer
 - `Dropout`: Dropout layer for regularization
+- `Embedding`: Embedding layer
 - `Sequential`: Container for stacking multiple layers
 
 ### Activation Functions (nn module)
@@ -36,6 +37,10 @@ pip install git+https://github.com/aspisov/deeplib.git
 
 ### Optimizers (optim module)
 - `SGD`: Stochastic Gradient Descent optimizer
+
+### Initializers (nn.init module)
+Most of the initializers in PyTorch are supported. For details, see [deeplib/nn/init.py](deeplib/nn/init.py).
+
 
 ## Quick Start
 

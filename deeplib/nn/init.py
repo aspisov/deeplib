@@ -27,6 +27,10 @@ def zeros_(tensor):
 def uniform_(tensor, low=0.0, high=1.0):
     with deeplib.no_grad():
         return tensor.uniform_(low, high)
+    
+def normal_(tensor, mean=0.0, std=1.0):
+    with deeplib.no_grad():
+        return tensor.normal_(mean, std)
 
 def xavier_normal_(tensor):
     fan_in, fan_out = _calculate_fan(tensor)
