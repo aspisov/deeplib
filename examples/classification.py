@@ -1,6 +1,7 @@
-import deeplib
+import deeplib as dl
 import deeplib.nn as nn
 import deeplib.optim as optim
+from deeplib.utils.data import Dataset, DataLoader
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -16,19 +17,32 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-X_train = deeplib.FloatTensor(X_train)
-y_train = deeplib.LongTensor(y_train)
-X_test = deeplib.FloatTensor(X_test)
-y_test = deeplib.LongTensor(y_test)
+X_test = dl.FloatTensor(X_test)
+y_test = dl.LongTensor(y_test)
 
+class IrisDataset(Dataset):
+    def __init__(self, X, y):
+        self.X = dl.FloatTensor(X)
+        self.y = dl.LongTensor(y)
+
+    def __len__(self):
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
+    
+batch_size = 4
+
+dataset = IrisDataset(X_train, y_train)
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 class IrisClassifier(nn.Module):
     def __init__(self):
         super(IrisClassifier, self).__init__()
         self.fc1 = nn.Linear(4, 10)
+        self.relu = nn.ReLU()
         self.batchnorm = nn.BatchNorm1d(10)
         self.fc2 = nn.Linear(10, 3)
-        self.relu = nn.ReLU()
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
@@ -41,20 +55,21 @@ model = IrisClassifier()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-num_epochs = 100
+num_epochs = 10
 for epoch in range(num_epochs):
-    optimizer.zero_grad()
-    predicted = model(X_train)
-    loss = criterion(predicted, y_train)
-    loss.backward()
-    optimizer.step()
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}")
+    epoch_loss = 0
+    for i, (X_batch, y_batch) in enumerate(loader):
+        optimizer.zero_grad()
+        y_pred = model(X_batch)
+        loss = criterion(y_pred, y_batch)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+    print(f"Epoch: {epoch + 1}, Step: {i + 1}, Loss: {epoch_loss / (i + 1):.4f}")
 
 # evaluation
 model.eval()
-with deeplib.no_grad():
+with dl.no_grad():
     predicted = model(X_test)
     predicted = predicted.argmax(dim=1)
     accuracy = (predicted == y_test).float().mean()

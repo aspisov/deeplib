@@ -55,6 +55,9 @@ class Tensor:
             
     def size(self):
         return self.data.size
+    
+    def __len__(self):
+        return len(self.data)
 
     def dim(self):
         return len(self.shape)

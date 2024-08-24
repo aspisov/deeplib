@@ -1,5 +1,5 @@
+import deeplib as dl
 from deeplib.tensor import Tensor
-import deeplib
 import numpy as np
 
 
@@ -40,23 +40,23 @@ def sigmoid(input: Tensor) -> Tensor:
     return out
 
 def mse_loss(input: Tensor, target: Tensor) -> Tensor:
-    return deeplib.mean((input - target) ** 2)
+    return dl.mean((input - target) ** 2)
 
 def cross_entropy_loss(logits: Tensor, target: Tensor) -> Tensor:
     N, C = logits.shape
     probs = softmax(logits, dim=1)
-    nll = -deeplib.log(probs[np.arange(N), target.data.astype(int)])
-    loss = deeplib.mean(nll)
+    nll = -dl.log(probs[np.arange(N), target.data.astype(int)])
+    loss = dl.mean(nll)
     return loss
 
 def log_softmax(x: Tensor, dim: int = -1) -> Tensor:
     """Numerically stable implementation of log_softmax"""
-    x_diff = x - deeplib.max(x, dim=dim, keepdims=True)
-    exp_tensor = deeplib.exp(x_diff)
-    sum_exp_x_diff = deeplib.sum(exp_tensor, dim=dim, keepdims=True)
-    return x_diff - deeplib.log(sum_exp_x_diff)
+    x_diff = x - dl.max(x, dim=dim, keepdims=True)
+    exp_tensor = dl.exp(x_diff)
+    sum_exp_x_diff = dl.sum(exp_tensor, dim=dim, keepdims=True)
+    return x_diff - dl.log(sum_exp_x_diff)
 
 def softmax(x: Tensor, dim: int = -1) -> Tensor:
     """Numerically stable implementation of softmax"""
-    exp_tensor = deeplib.exp(x - deeplib.max(x, dim=dim, keepdims=True))
-    return exp_tensor / deeplib.sum(exp_tensor, dim=dim, keepdims=True)
+    exp_tensor = dl.exp(x - dl.max(x, dim=dim, keepdims=True))
+    return exp_tensor / dl.sum(exp_tensor, dim=dim, keepdims=True)
