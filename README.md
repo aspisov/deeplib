@@ -24,7 +24,7 @@ pip install git+https://github.com/aspisov/deeplib.git
 - `BatchNorm1d`: 1D batch normalization layer
 - `Dropout`: Dropout layer for regularization
 - `Embedding`: Embedding layer
-- `Sequential`: Container for stacking multiple layers
+- `RNN`: RNN layer
 
 ### Activation Functions (nn module)
 - `ReLU`: Rectified Linear Unit activation
@@ -47,6 +47,7 @@ Most of the initializers in PyTorch are supported. For details, see [deeplib/nn/
 ```python
 import deeplib as dl
 import deeplib.nn as nn
+import deeplib.optim as optim
 
 # Create a model
 model = nn.Sequential(
@@ -57,7 +58,7 @@ model = nn.Sequential(
 
 # Define loss function and optimizer
 criterion = nn.MSELoss()
-optimizer = dl.optim.SGD(model.parameters(), lr=0.01)
+optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 # Example training loop
 for epoch in range(100):
